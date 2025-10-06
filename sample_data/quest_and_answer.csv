@@ -1,0 +1,8 @@
+id,admin_id,question,answer,answered_at
+q1,admin001,¿Cómo usar el scraper?,Sigue la guía paso a paso en la documentación,2025-01-10 10:00:00
+q2,admin001,¿Cuál es el límite de scraping?,El límite es 1000 cuentas por día,2025-01-11 11:00:00
+q3,admin001,¿Cómo exportar los datos?,Usa el botón de exportar en formato CSV o JSON,2025-01-12 12:00:00
+q4,admin002,¿Cómo configurar filtros?,Ve a la sección de filtros y selecciona los criterios,2025-01-13 13:00:00
+q5,admin002,¿Puedo programar scraping?,Sí usa la función de scheduling en configuración,2025-01-14 14:00:00
+q6,admin004,¿Cómo ver el historial?,Accede a la sección de historial en el dashboard,2025-01-15 15:00:00
+q7,admin004,¿Hay soporte técnico?,Sí contáctanos en support@scrapetok.com,2025-01-16 16:00:00

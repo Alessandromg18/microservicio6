@@ -1,0 +1,6 @@
+id,name,email,is_active,created_at
+admin001,Juan Pérez,juan@scrapetok.com,true,2024-01-01 00:00:00
+admin002,María García,maria@scrapetok.com,true,2024-01-15 00:00:00
+admin003,Carlos López,carlos@scrapetok.com,false,2024-02-01 00:00:00
+admin004,Ana Torres,ana@scrapetok.com,true,2024-03-01 00:00:00
+admin005,Pedro Sánchez,pedro@scrapetok.com,false,2024-04-01 00:00:00

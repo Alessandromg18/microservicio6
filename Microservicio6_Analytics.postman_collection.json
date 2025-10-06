@@ -1,0 +1,472 @@
+{
+	"info": {
+		"_postman_id": "ms6-analytics-api",
+		"name": "ScrapeTok Analytics API - Microservicio 6",
+		"description": "## API de Analytics para ScrapeTok\n\nEsta colección contiene todos los endpoints del Microservicio 6, que proporciona análisis avanzado sobre datos almacenados en AWS Athena.\n\n### Características principales:\n* 🔍 **Análisis de usuarios**: Obtén estadísticas sobre usuarios con más cuentas scrapeadas\n* 👨‍💼 **Métricas de admins**: Consulta información sobre administradores, preguntas respondidas y vistas\n* 🧪 **Health check**: Verifica el estado del servicio\n\n### Configuración:\nAsegúrate de configurar la variable `{{base_url}}` en Postman:\n- **Local**: `http://localhost:8006`\n- **Docker**: `http://localhost:8006`\n- **Producción**: Ajusta según tu deployment\n\n### Tecnologías:\n- FastAPI\n- AWS Athena\n- Boto3\n\n### Documentación Swagger:\nAccede a la documentación interactiva en: `{{base_url}}/docs`",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "ScrapeTok-MS6"
+	},
+	"item": [
+		{
+			"name": "Health",
+			"item": [
+				{
+					"name": "Echo Test",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has echo property\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('echo');",
+									"});",
+									"",
+									"pm.test(\"Echo message matches request\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var requestData = JSON.parse(pm.request.body.raw);",
+									"    pm.expect(jsonData.echo).to.eql(requestData.message);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"Hello from ScrapeTok Analytics API!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/echo",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"echo"
+							]
+						},
+						"description": "Endpoint simple para verificar que el servicio está funcionando correctamente. Devuelve el mismo mensaje que recibe.\n\n**Parámetros:**\n- `message` (string, required): El mensaje que deseas que se devuelva\n\n**Respuesta:**\n```json\n{\n  \"echo\": \"Hello from ScrapeTok Analytics API!\"\n}\n```"
+					},
+					"response": [
+						{
+							"name": "Echo Test - Success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"message\": \"Hello World\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/echo",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"echo"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"echo\": \"Hello World\"\n}"
+						}
+					]
+				}
+			],
+			"description": "Endpoints para verificar el estado del servicio y realizar pruebas básicas."
+		},
+		{
+			"name": "Analytics",
+			"item": [
+				{
+					"name": "Get Users Most Scraped",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 or 500\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 500]);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.test(\"Response has success property\", function () {",
+									"        var jsonData = pm.response.json();",
+									"        pm.expect(jsonData).to.have.property('success');",
+									"        pm.expect(jsonData.success).to.be.true;",
+									"    });",
+									"    ",
+									"    pm.test(\"Response has data array\", function () {",
+									"        var jsonData = pm.response.json();",
+									"        pm.expect(jsonData).to.have.property('data');",
+									"        pm.expect(jsonData.data).to.be.an('array');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/users/most_scraped?limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"most_scraped"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Número máximo de usuarios a retornar (1-1000)"
+								}
+							]
+						},
+						"description": "Consulta los usuarios con más cuentas scrapeadas en la plataforma.\n\n**Query Parameters:**\n- `limit` (integer, optional): Número máximo de usuarios a retornar (1-1000, default: 10)\n\n**Esta consulta ejecuta una query en AWS Athena que:**\n- Cuenta las cuentas scrapeadas por usuario\n- Cuenta los filtros activos de cada usuario\n- Ordena los resultados por cantidad de cuentas scrapeadas (descendente)\n\n**Respuesta exitosa:**\n```json\n{\n  \"success\": true,\n  \"data\": [\n    {\n      \"userId\": \"user123\",\n      \"accounts_scraped\": 45,\n      \"active_filters\": 12\n    }\n  ]\n}\n```\n\n**Nota:** Requiere configuración de AWS Athena para funcionar correctamente."
+					},
+					"response": [
+						{
+							"name": "Users Most Scraped - Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/users/most_scraped?limit=5",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"users",
+										"most_scraped"
+									],
+									"query": [
+										{
+											"key": "limit",
+											"value": "5"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": [\n        {\n            \"userId\": \"user123\",\n            \"accounts_scraped\": 45,\n            \"active_filters\": 12\n        },\n        {\n            \"userId\": \"user456\",\n            \"accounts_scraped\": 38,\n            \"active_filters\": 8\n        },\n        {\n            \"userId\": \"user789\",\n            \"accounts_scraped\": 32,\n            \"active_filters\": 15\n        }\n    ]\n}"
+						},
+						{
+							"name": "Users Most Scraped - Error",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/users/most_scraped?limit=10",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"users",
+										"most_scraped"
+									],
+									"query": [
+										{
+											"key": "limit",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"status": "Internal Server Error",
+							"code": 500,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"detail\": \"Cliente de Athena no inicializado. Verifica la configuración de AWS.\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Admins Questions and Views",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 or 500\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 500]);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.test(\"Response has success property\", function () {",
+									"        var jsonData = pm.response.json();",
+									"        pm.expect(jsonData).to.have.property('success');",
+									"        pm.expect(jsonData.success).to.be.true;",
+									"    });",
+									"    ",
+									"    pm.test(\"Response has data array\", function () {",
+									"        var jsonData = pm.response.json();",
+									"        pm.expect(jsonData).to.have.property('data');",
+									"        pm.expect(jsonData.data).to.be.an('array');",
+									"    });",
+									"    ",
+									"    pm.test(\"Data contains admin metrics\", function () {",
+									"        var jsonData = pm.response.json();",
+									"        if (jsonData.data.length > 0) {",
+									"            var admin = jsonData.data[0];",
+									"            pm.expect(admin).to.have.property('admin_id');",
+									"            pm.expect(admin).to.have.property('is_active');",
+									"            pm.expect(admin).to.have.property('questions_answered');",
+									"            pm.expect(admin).to.have.property('avg_views');",
+									"        }",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admins/questions_and_views?is_active=true&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admins",
+								"questions_and_views"
+							],
+							"query": [
+								{
+									"key": "is_active",
+									"value": "true",
+									"description": "Estado del administrador (true/false)"
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Número máximo de administradores a retornar (1-1000)"
+								}
+							]
+						},
+						"description": "Consulta métricas de administradores filtrados por estado de actividad.\n\n**Query Parameters:**\n- `is_active` (string, optional): Estado del administrador - debe ser \"true\" o \"false\" (default: \"true\")\n- `limit` (integer, optional): Número máximo de resultados (1-1000, default: 10)\n\n**Esta consulta ejecuta una query en AWS Athena que:**\n- Filtra administradores por estado (activos/inactivos)\n- Cuenta las preguntas que han respondido\n- Calcula el promedio de vistas de sus contenidos en TikTok\n- Ordena por cantidad de preguntas respondidas (descendente)\n\n**Respuesta exitosa:**\n```json\n{\n  \"success\": true,\n  \"data\": [\n    {\n      \"admin_id\": \"admin001\",\n      \"is_active\": \"true\",\n      \"questions_answered\": 156,\n      \"avg_views\": 12500.75\n    }\n  ]\n}\n```\n\n**Nota:** Requiere configuración de AWS Athena para funcionar correctamente."
+					},
+					"response": [
+						{
+							"name": "Admins Questions and Views - Active",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/admins/questions_and_views?is_active=true&limit=5",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"admins",
+										"questions_and_views"
+									],
+									"query": [
+										{
+											"key": "is_active",
+											"value": "true"
+										},
+										{
+											"key": "limit",
+											"value": "5"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": [\n        {\n            \"admin_id\": \"admin001\",\n            \"is_active\": \"true\",\n            \"questions_answered\": 156,\n            \"avg_views\": 12500.75\n        },\n        {\n            \"admin_id\": \"admin002\",\n            \"is_active\": \"true\",\n            \"questions_answered\": 98,\n            \"avg_views\": 8900.50\n        }\n    ]\n}"
+						},
+						{
+							"name": "Admins Questions and Views - Inactive",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/admins/questions_and_views?is_active=false&limit=5",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"admins",
+										"questions_and_views"
+									],
+									"query": [
+										{
+											"key": "is_active",
+											"value": "false"
+										},
+										{
+											"key": "limit",
+											"value": "5"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"data\": [\n        {\n            \"admin_id\": \"admin003\",\n            \"is_active\": \"false\",\n            \"questions_answered\": 45,\n            \"avg_views\": 3200.25\n        }\n    ]\n}"
+						},
+						{
+							"name": "Admins Questions and Views - Error",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/admins/questions_and_views?is_active=true&limit=10",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"admins",
+										"questions_and_views"
+									],
+									"query": [
+										{
+											"key": "is_active",
+											"value": "true"
+										},
+										{
+											"key": "limit",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"status": "Internal Server Error",
+							"code": 500,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"detail\": \"Cliente de Athena no inicializado. Verifica la configuración de AWS.\"\n}"
+						}
+					]
+				}
+			],
+			"description": "Endpoints de análisis y métricas de usuarios y administradores. Ejecuta consultas sobre AWS Athena."
+		},
+		{
+			"name": "Documentation",
+			"item": [
+				{
+					"name": "Get OpenAPI Schema",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/openapi.json",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"openapi.json"
+							]
+						},
+						"description": "Obtiene el schema OpenAPI completo de la API en formato JSON. Útil para generar clientes automáticamente o integrar con herramientas de testing."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints relacionados con la documentación de la API."
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script que se ejecuta antes de cada request",
+					"console.log('Ejecutando request a:', pm.request.url.toString());"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Script que se ejecuta después de cada request",
+					"console.log('Response status:', pm.response.code);",
+					"console.log('Response time:', pm.response.responseTime + 'ms');"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8006",
+			"type": "string"
+		}
+	]
+}
